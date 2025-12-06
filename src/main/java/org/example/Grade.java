@@ -1,7 +1,7 @@
 package org.example;
 
 // Grade class
-class Grade {
+public class Grade {
     private static int counter = 0;
     private int gradeId;
     private int studentId;
@@ -9,33 +9,44 @@ class Grade {
     private double score;
     private String gradeLevel;
     private boolean passing;
-
-    public Grade(int studentId, Subject subject, double score, String gradeLevel, boolean passing) {
+    private double gpa; // NEW: Store GPA value
+    
+    public Grade(int studentId, Subject subject, double score, String gradeLevel, boolean passing, double gpa) {
         this.gradeId = ++counter;
         this.studentId = studentId;
         this.subject = subject;
         this.score = score;
         this.gradeLevel = gradeLevel;
         this.passing = passing;
+        this.gpa = gpa;
     }
-
-    public int getStudentId() {
-        return studentId;
+    
+    public int getGradeId() {
+        return gradeId;
     }
-
-    public Subject getSubject() {
-        return subject;
+    
+    public int getStudentId() { 
+        return studentId; 
     }
-
-    public double getScore() {
-        return score;
+    
+    public Subject getSubject() { 
+        return subject; 
     }
-
-    public String getGradeLevel() {
-        return gradeLevel;
+    
+    public double getScore() { 
+        return score; 
     }
-
-    public boolean isPassing() {
-        return passing;
+    
+    public String getGradeLevel() { 
+        return gradeLevel; 
+    }
+    
+    public boolean isPassing() { 
+        return passing; 
+    }
+    
+    // NEW: Get GPA value
+    public double getGpa() {
+        return gpa;
     }
 }
