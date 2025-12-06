@@ -9,6 +9,12 @@ A Java-based console application for managing students and their grades with sup
 - **Grade Reports**: View individual student grade reports with averages
 - **Automatic Grading**: Different grading scales for Regular and Honors students
 - **Pre-loaded Data**: Comes with 5 sample students for testing
+- **Export Grade Report - Save student reports to text files
+- **Calculate GPA - Convert percentage grades to 4.0 GPA scale
+- **﻿﻿Bulk Grade Import - Load multiple grades from CSV file
+- **Grade Statistics - View class-wide analytics (highest, lowest, median, standard deviation)
+- ﻿﻿**Student Search - Find studentsby name or ID with partial matching
+
 
 ## System Architecture
 
