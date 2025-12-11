@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class GradeManagerTest {
 
@@ -12,11 +14,17 @@ public class GradeManagerTest {
     private Subject testSubject;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         // This runs before each test
-        gradeManager = new GradeManager();
+        // Create all dependencies using dependency injection
+        IGradeRepository gradeRepository = new GradeRepository();
+        IFileExporter fileExporter = new GradeExporter();
+        IGradeImporter gradeImporter = new GradeImporter();
+        IGradeStatisticsCalculator statisticsCalculator = new GradeStatisticsCalculator();
+        
+        gradeManager = new GradeManager(gradeRepository, fileExporter, gradeImporter, statisticsCalculator);
 
-        // Create a mock student (you'll need to adjust based on your Student class)
+        // Create a mock student
         testStudent = new RegularStudent( "John Doe", 20);
 
         // Create a mock subject
@@ -26,9 +34,22 @@ public class GradeManagerTest {
     @AfterEach
     void tearDown() {
         // Clean up any files created during tests
-        File file = new File("GradeReport_1_John_Doe.txt");
-        if (file.exists()) {
-            file.delete();
+        // Clean up grade report files with any student ID
+        File[] files = new File(".").listFiles((dir, name) -> 
+            name.matches("GradeReport_\\d+_John_Doe\\.txt"));
+        if (files != null) {
+            for (File file : files) {
+                file.delete();
+            }
+        }
+        
+        File file2 = new File("test_grades.csv");
+        if (file2.exists()) {
+            file2.delete();
+        }
+        File file3 = new File("test_invalid.csv");
+        if (file3.exists()) {
+            file3.delete();
         }
     }
 
@@ -118,11 +139,13 @@ public class GradeManagerTest {
         // Export the report
         gradeManager.exportGradeReport(testStudent);
 
-        // Check if file was created
-        File reportFile = new File("GradeReport_1_John_Doe.txt");
-        assertTrue(reportFile.exists(), "Grade report file should be created");
+        // Check if file was created (with pattern matching for student ID)
+        File[] files = new File(".").listFiles((dir, name) -> 
+            name.matches("GradeReport_\\d+_John_Doe\\.txt"));
+        assertTrue(files != null && files.length > 0, "Grade report file should be created");
 
         // Verify file has content
+        File reportFile = files[0];
         BufferedReader reader = new BufferedReader(new FileReader(reportFile));
         String firstLine = reader.readLine();
         assertNotNull(firstLine, "File should have content");
@@ -137,8 +160,12 @@ public class GradeManagerTest {
         // Export report
         gradeManager.exportGradeReport(testStudent);
 
-        // Read and verify file content
-        File reportFile = new File("GradeReport_1_John_Doe.txt");
+        // Find the created file (with pattern matching for student ID)
+        File[] files = new File(".").listFiles((dir, name) -> 
+            name.matches("GradeReport_\\d+_John_Doe\\.txt"));
+        assertTrue(files != null && files.length > 0, "Grade report file should exist");
+        
+        File reportFile = files[0];
         BufferedReader reader = new BufferedReader(new FileReader(reportFile));
         StringBuilder content = new StringBuilder();
         String line;
@@ -154,13 +181,27 @@ public class GradeManagerTest {
     }
 
     @Test
-    void testExportGradeReport_NoGrades() {
+    void testExportGradeReport_NoGrades() throws IOException {
         // Export report without recording any grades
         assertDoesNotThrow(() -> gradeManager.exportGradeReport(testStudent));
 
-        // File should still be created
-        File reportFile = new File("GradeReport_1_John_Doe.txt");
-        assertTrue(reportFile.exists(), "Report file should be created even with no grades");
+        // File should still be created (with pattern matching for student ID)
+        File[] files = new File(".").listFiles((dir, name) -> 
+            name.matches("GradeReport_\\d+_John_Doe\\.txt"));
+        assertTrue(files != null && files.length > 0, "Report file should be created even with no grades");
+        
+        // Verify it has content about no grades
+        File reportFile = files[0];
+        BufferedReader reader = new BufferedReader(new FileReader(reportFile));
+        StringBuilder content = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            content.append(line).append("\n");
+        }
+        reader.close();
+        
+        String fileContent = content.toString();
+        assertTrue(fileContent.contains("GRADE REPORT"), "File should contain report header even with no grades");
     }
 
     @Test

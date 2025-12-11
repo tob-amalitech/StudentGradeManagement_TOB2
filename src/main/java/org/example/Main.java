@@ -2,12 +2,37 @@ package org.example;
 
 import java.util.Scanner;
 
-// Main program
+/**
+ * REFACTORED FOR SOLID PRINCIPLES
+ * 
+ * Changes in Main.java:
+ * 1. Uses Dependency Injection - creates components and passes to GradeManager
+ * 2. Uses SubjectFactory instead of hard-coded subject creation
+ * 3. Much simpler because components are separated
+ * 
+ * Benefits for beginners:
+ * - Main no longer needs to know HOW components work
+ * - Easy to see what dependencies GradeManager needs
+ * - Subject selection is clean and easy to modify
+ */
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         StudentManager studentManager = new StudentManager();
-        GradeManager gradeManager = new GradeManager();
+        
+        // DEPENDENCY INJECTION - Create all components and pass to GradeManager
+        IGradeRepository gradeRepository = new GradeRepository();
+        IFileExporter fileExporter = new GradeExporter();
+        IGradeImporter gradeImporter = new GradeImporter();
+        IGradeStatisticsCalculator statisticsCalculator = new GradeStatisticsCalculator();
+        
+        // GradeManager coordinates between all these components
+        GradeManager gradeManager = new GradeManager(
+            gradeRepository,
+            fileExporter,
+            gradeImporter,
+            statisticsCalculator
+        );
         
         System.out.println("========================================");
         System.out.println("  Student Grade Management System");
@@ -54,7 +79,7 @@ public class Main {
                 }
                 
             } else if (choice == 3) {
-                // NEW: Search students
+                // Search students
                 System.out.print("\nEnter student name or ID to search: ");
                 String query = scanner.nextLine();
                 studentManager.searchStudents(query);
@@ -78,30 +103,25 @@ public class Main {
                 scanner.nextLine();
                 
                 Subject subject = null;
+                
+                // USE FACTORY PATTERN - Much cleaner!
                 if (type == 1) {
-                    System.out.println("1. Math  2. English  3. Science");
+                    SubjectFactory.displayCoreSubjectOptions();
                     System.out.print("Choice: ");
                     int s = scanner.nextInt();
                     scanner.nextLine();
-                    if (s == 1) {
-                        subject = new CoreSubject("Math", "MATH101");
-                    } else if (s == 2) {
-                        subject = new CoreSubject("English", "ENG101");
-                    } else {
-                        subject = new CoreSubject("Science", "SCI101");
-                    }
+                    subject = SubjectFactory.createCoreSubject(s);
                 } else {
-                    System.out.println("1. Music  2. Art  3. PE");
+                    SubjectFactory.displayElectiveSubjectOptions();
                     System.out.print("Choice: ");
                     int s = scanner.nextInt();
                     scanner.nextLine();
-                    if (s == 1) {
-                        subject = new ElectiveSubject("Music", "MUS101");
-                    } else if (s == 2) {
-                        subject = new ElectiveSubject("Art", "ART101");
-                    } else {
-                        subject = new ElectiveSubject("PE", "PE101");
-                    }
+                    subject = SubjectFactory.createElectiveSubject(s);
+                }
+                
+                if (subject == null) {
+                    System.out.println("Invalid subject choice!");
+                    continue;
                 }
                 
                 System.out.print("Score (0-100): ");
@@ -125,7 +145,7 @@ public class Main {
                 gradeManager.viewGradeReport(student);
                 
             } else if (choice == 6) {
-                // NEW: Export grade report
+                // Export grade report
                 System.out.print("Student ID: ");
                 int id = scanner.nextInt();
                 scanner.nextLine();
@@ -139,11 +159,11 @@ public class Main {
                 gradeManager.exportGradeReport(student);
                 
             } else if (choice == 7) {
-                // NEW: Bulk import grades
+                // Bulk import grades
                 gradeManager.bulkImportGrades(studentManager);
                 
             } else if (choice == 8) {
-                // NEW: View statistics
+                // View statistics
                 gradeManager.viewGradeStatistics(studentManager);
                 
             } else if (choice == 9) {
